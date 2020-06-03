@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 )
@@ -20,8 +21,19 @@ type Client struct {
 	HTTPClient *http.Client
 }
 
+// BasicAuth ...
+type BasicAuth struct {
+	Login    string
+	Password string
+}
+
 // BaseURL ...
-const BaseURL = "https://yandex.ru"
+const BaseURL = "https://your.xml.server.com"
+
+var basicAuth = &BasicAuth{
+	Login:    "login",
+	Password: "password",
+}
 
 // NewClient ...
 func NewClient() *Client {
@@ -35,10 +47,11 @@ func NewClient() *Client {
 func main() {
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/", BaseURL), nil)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "text/html")
 	req.Header.Set("Accept", "text/html")
+	req.SetBasicAuth(basicAuth.Login, basicAuth.Password)
 
 	client := &http.Client{
 		Timeout: time.Minute,
@@ -46,19 +59,19 @@ func main() {
 
 	res, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		var errRes errorResponse
 		if err := json.NewDecoder(res.Body).Decode(&errRes); err == nil {
-			panic(errors.New(errRes.Message))
+			log.Fatal(errors.New(errRes.Message))
 		}
-		panic(fmt.Errorf("Unknown error, status code: %d", res.StatusCode))
+		log.Fatal(fmt.Errorf("Unknown error, status code: %d", res.StatusCode))
 	}
 
 	body, _ := ioutil.ReadAll(res.Body)
 
-	fmt.Println(string(body))
+	fmt.Println(body)
 }

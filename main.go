@@ -2,12 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/nikolasmelui/go-xml2json-mapper/cconfig"
+	"github.com/nikolasmelui/go-xml2json-mapper/products"
 )
 
 type errorResponse struct {
@@ -21,20 +25,6 @@ type Client struct {
 	HTTPClient *http.Client
 }
 
-// BasicAuth ...
-type BasicAuth struct {
-	Login    string
-	Password string
-}
-
-// BaseURL ...
-const BaseURL = "https://your.xml.server.com"
-
-var basicAuth = &BasicAuth{
-	Login:    "login",
-	Password: "password",
-}
-
 // NewClient ...
 func NewClient() *Client {
 	return &Client{
@@ -45,13 +35,13 @@ func NewClient() *Client {
 }
 
 func main() {
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/", BaseURL), nil)
+	req, err := http.NewRequest("GET", products.ProductsURL, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	req.Header.Set("Content-Type", "text/html")
-	req.Header.Set("Accept", "text/html")
-	req.SetBasicAuth(basicAuth.Login, basicAuth.Password)
+	req.Header.Set("Content-Type", "application/xml")
+	req.Header.Set("Accept", "application/xml")
+	req.SetBasicAuth(cconfig.Config.BasicAuthLogin, cconfig.Config.BasicAuthPassword)
 
 	client := &http.Client{
 		Timeout: time.Minute,
@@ -72,6 +62,11 @@ func main() {
 	}
 
 	body, _ := ioutil.ReadAll(res.Body)
+	var data products.Products
+	err = xml.Unmarshal(body, &data)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
 
-	fmt.Println(body)
+	data.BeautyPrintProducts()
 }

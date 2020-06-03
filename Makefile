@@ -1,4 +1,7 @@
-.PHONY: run build bin
+.PHONY: config run build bin
+
+config:
+	cp ./cconfig/cconfig.example.go ./cconfig/cconfig.go
 
 run:
 	go run ./main.go

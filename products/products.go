@@ -67,8 +67,8 @@ type Products struct {
 	Products []Product `xml:"Товар"`
 }
 
-// BeautyPrintProducts ...
-func (p *Products) BeautyPrintProducts() {
+// BeautyPrint ...
+func (p *Products) BeautyPrint() {
 	for _, product := range p.Products {
 		fmt.Printf("Товар:\n")
 		fmt.Printf("  Ид: %s\n", product.ID)

@@ -68,5 +68,5 @@ func main() {
 		log.Printf("error: %v", err)
 	}
 
-	data.BeautyPrintProducts()
+	data.BeautyPrint()
 }

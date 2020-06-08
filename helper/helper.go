@@ -5,9 +5,10 @@ import (
 	"fmt"
 )
 
-// AddHash ...
-func AddHash(o interface{}) string {
-	h := sha256.New()
-	h.Write([]byte(fmt.Sprintf("%v", o)))
-	return fmt.Sprintf("%x", h.Sum(nil))
+// InstanceHash ...
+func InstanceHash(instance interface{}) string {
+	hash := sha256.New()
+	hash.Write([]byte(fmt.Sprintf("%v", instance)))
+	hashSum := hash.Sum(nil)
+	return fmt.Sprintf("%x", hashSum)
 }

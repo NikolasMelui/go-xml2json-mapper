@@ -47,7 +47,7 @@ func (cache *redisCache) Set(key string, value *entity.Product) {
 		panic(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	client.Set(ctx, key, json, cache.expires*time.Second)
@@ -58,7 +58,7 @@ func (cache *redisCache) Get(key string) *ProductWithHash {
 
 	client := cache.getClient()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	val, err := client.Get(ctx, key).Result()

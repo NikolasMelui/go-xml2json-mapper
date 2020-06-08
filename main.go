@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/nikolasmelui/go-xml2json-mapper/cconfig"
+	"github.com/nikolasmelui/go-xml2json-mapper/helper"
 	"github.com/nikolasmelui/go-xml2json-mapper/products"
 )
 
@@ -68,5 +69,9 @@ func main() {
 		log.Printf("error: %v", err)
 	}
 
-	data.BeautyPrint()
+	for _, product := range data.Products {
+		hash := helper.AddHash(product)
+		fmt.Printf("%s\n", hash)
+		// product.BeautyPrint()
+	}
 }

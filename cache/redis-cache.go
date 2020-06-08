@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
@@ -16,7 +17,8 @@ type redisCache struct {
 	expires  time.Duration
 }
 
-func newRedisCache(host string, password string, db int, expires time.Duration) *redisCache {
+// NewRedisCache ...
+func NewRedisCache(host string, password string, db int, expires time.Duration) ProductCache {
 	return &redisCache{
 		host:     host,
 		password: password,
@@ -37,29 +39,38 @@ func (cache *redisCache) getClient() *redis.Client {
 func (cache *redisCache) Set(key string, value *entity.Product) {
 	client := cache.getClient()
 
-	json, err := json.Marshal(&ProductCache{
+	json, err := json.Marshal(&ProductWithHash{
 		Data: *value,
 		Hash: helper.InstanceHash(value),
 	})
 	if err != nil {
 		panic(err)
 	}
-	client.Set(nil, key, json, cache.expires*time.Second)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	client.Set(ctx, key, json, cache.expires*time.Second)
 
 }
 
-func (cache *redisCache) Get(key string) *ProductCache {
+func (cache *redisCache) Get(key string) *ProductWithHash {
 
 	client := cache.getClient()
-	val, err := client.Get(nil, key).Result()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+
+	val, err := client.Get(ctx, key).Result()
 	if err != nil {
 		return nil
 	}
-	productCache := ProductCache{}
-	err = json.Unmarshal([]byte(val), &productCache)
+
+	productWithHash := ProductWithHash{}
+	err = json.Unmarshal([]byte(val), &productWithHash)
 	if err != nil {
 		panic(err)
 	}
 
-	return &productCache
+	return &productWithHash
 }

@@ -3,6 +3,8 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"log"
+	"sync"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -17,6 +19,11 @@ type redisCache struct {
 	expires  time.Duration
 }
 
+// RedisClient ...
+type RedisClient struct {
+	*redis.Client
+}
+
 // NewRedisCache ...
 func NewRedisCache(host string, password string, db int, expires time.Duration) ProductCache {
 	return &redisCache{
@@ -27,12 +34,29 @@ func NewRedisCache(host string, password string, db int, expires time.Duration) 
 	}
 }
 
-func (cache *redisCache) getClient() *redis.Client {
-	return redis.NewClient(&redis.Options{
-		Addr:     cache.host,
-		Password: cache.password,
-		DB:       cache.db,
+var once sync.Once
+var redisClient *RedisClient
+
+func (cache *redisCache) getClient() *RedisClient {
+	once.Do(func() {
+		client := redis.NewClient(&redis.Options{
+			Addr:     cache.host,
+			Password: cache.password,
+			DB:       cache.db,
+			PoolSize: 10,
+		})
+		redisClient = &RedisClient{client}
 	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	_, err := redisClient.Ping(ctx).Result()
+	if err != nil {
+		log.Fatalf("Could not connect to the redis %v", err)
+	}
+	return redisClient
+
 }
 
 // Set ...
@@ -66,11 +90,8 @@ func (cache *redisCache) Get(key string) *ProductWithHash {
 		return nil
 	}
 
-	productWithHash := ProductWithHash{}
-	err = json.Unmarshal([]byte(val), &productWithHash)
-	if err != nil {
-		panic(err)
-	}
+	productWithHash := &ProductWithHash{}
+	err = json.Unmarshal([]byte(val), productWithHash)
 
-	return &productWithHash
+	return productWithHash
 }

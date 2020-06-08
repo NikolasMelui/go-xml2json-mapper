@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/nikolasmelui/go-xml2json-mapper/cache"
 	"github.com/nikolasmelui/go-xml2json-mapper/cconfig"
 	"github.com/nikolasmelui/go-xml2json-mapper/entity"
-	"github.com/nikolasmelui/go-xml2json-mapper/helper"
 )
 
 type errorResponse struct {
@@ -20,26 +20,12 @@ type errorResponse struct {
 	Message string `json:"message"`
 }
 
-// Client ...
-type Client struct {
-	BaseURL    string
-	HTTPClient *http.Client
-}
-
-// NewClient ...
-func NewClient() *Client {
-	return &Client{
-		HTTPClient: &http.Client{
-			Timeout: time.Minute,
-		},
-	}
-}
-
 func main() {
 	req, err := http.NewRequest("GET", entity.ProductsURL, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("Accept", "application/xml")
 	req.SetBasicAuth(cconfig.Config.BasicAuthLogin, cconfig.Config.BasicAuthPassword)
@@ -47,13 +33,13 @@ func main() {
 	client := &http.Client{
 		Timeout: time.Minute,
 	}
-
 	res, err := client.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	defer res.Body.Close()
+
 	if res.StatusCode != http.StatusOK {
 		var errRes errorResponse
 		if err := json.NewDecoder(res.Body).Decode(&errRes); err == nil {
@@ -63,15 +49,23 @@ func main() {
 	}
 
 	body, _ := ioutil.ReadAll(res.Body)
-	var data entity.Products
-	err = xml.Unmarshal(body, &data)
+	var productsResponse entity.ProductsResponse
+	err = xml.Unmarshal(body, &productsResponse)
 	if err != nil {
 		log.Printf("error: %v", err)
 	}
 
-	for _, product := range data.Products {
-		hash := helper.InstanceHash(product)
-		fmt.Printf("%s\n", hash)
-		// product.BeautyPrint()
+	var productsCache cache.ProductCache = cache.NewRedisCache(cconfig.Config.RedisHost, cconfig.Config.RedisPassword, cconfig.Config.RedisDB, 1000)
+
+	for i, product := range productsResponse.Products {
+		time.Sleep(10 * time.Millisecond)
+		fmt.Printf("%d ----------\n", i)
+		productsCache.Set(product.ID, &product)
+		// productCache := productsCache.Get(product.ID)
+		// if productCache == nil {
+		// 	fmt.Printf("Product %s with index %d did not found\n", product.ID, i)
+		// } else {
+		// 	fmt.Printf("%x\n", productCache.Data)
+		// }
 	}
 }

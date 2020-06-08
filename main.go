@@ -61,11 +61,12 @@ func main() {
 		time.Sleep(10 * time.Millisecond)
 		fmt.Printf("%d ----------\n", i)
 		productsCache.Set(product.ID, &product)
-		// productCache := productsCache.Get(product.ID)
-		// if productCache == nil {
-		// 	fmt.Printf("Product %s with index %d did not found\n", product.ID, i)
-		// } else {
-		// 	fmt.Printf("%x\n", productCache.Data)
-		// }
+		time.Sleep(100 * time.Millisecond)
+		productCache := productsCache.Get(product.ID)
+		if productCache == nil {
+			fmt.Printf("Product %s with index %d did not found\n", product.ID, i)
+		} else {
+			fmt.Printf("%x\n", productCache.Data)
+		}
 	}
 }

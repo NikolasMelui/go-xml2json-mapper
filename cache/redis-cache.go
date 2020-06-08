@@ -33,6 +33,7 @@ func (cache *redisCache) getClient() *redis.Client {
 	})
 }
 
+// Set ...
 func (cache *redisCache) Set(key string, value *entity.Product) {
 	client := cache.getClient()
 
@@ -45,4 +46,20 @@ func (cache *redisCache) Set(key string, value *entity.Product) {
 	}
 	client.Set(nil, key, json, cache.expires*time.Second)
 
+}
+
+func (cache *redisCache) Get(key string) *ProductCache {
+
+	client := cache.getClient()
+	val, err := client.Get(nil, key).Result()
+	if err != nil {
+		return nil
+	}
+	productCache := ProductCache{}
+	err = json.Unmarshal([]byte(val), &productCache)
+	if err != nil {
+		panic(err)
+	}
+
+	return &productCache
 }

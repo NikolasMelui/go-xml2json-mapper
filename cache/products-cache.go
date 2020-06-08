@@ -1,10 +1,10 @@
 package cache
 
-import "github.com/nikolasmelui/go-xml2json-mapper/products"
+import "github.com/nikolasmelui/go-xml2json-mapper/entity"
 
 // ProductCache ...
 type ProductCache struct {
-	Data products.Product
+	Data entity.Product
 	Hash string
 }
 

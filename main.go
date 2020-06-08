@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/nikolasmelui/go-xml2json-mapper/cconfig"
+	"github.com/nikolasmelui/go-xml2json-mapper/entity"
 	"github.com/nikolasmelui/go-xml2json-mapper/helper"
-	"github.com/nikolasmelui/go-xml2json-mapper/products"
 )
 
 type errorResponse struct {
@@ -36,7 +36,7 @@ func NewClient() *Client {
 }
 
 func main() {
-	req, err := http.NewRequest("GET", products.ProductsURL, nil)
+	req, err := http.NewRequest("GET", entity.ProductsURL, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -63,14 +63,14 @@ func main() {
 	}
 
 	body, _ := ioutil.ReadAll(res.Body)
-	var data products.Products
+	var data entity.Products
 	err = xml.Unmarshal(body, &data)
 	if err != nil {
 		log.Printf("error: %v", err)
 	}
 
 	for _, product := range data.Products {
-		hash := helper.AddHash(product)
+		hash := helper.InstanceHash(product)
 		fmt.Printf("%s\n", hash)
 		// product.BeautyPrint()
 	}

@@ -68,33 +68,31 @@ type Products struct {
 }
 
 // BeautyPrint ...
-func (p *Products) BeautyPrint() {
-	for _, product := range p.Products {
-		fmt.Printf("Товар:\n")
-		fmt.Printf("  Ид: %s\n", product.ID)
-		fmt.Printf("  Наименование: %s\n", product.Title)
-		fmt.Printf("  Артикул: %s\n", product.VendorCode)
-		fmt.Printf("  Кратность: %s\n", product.Multiplicity)
-		fmt.Printf("  Зарезервировано: %s\n", product.Reservation)
-		fmt.Printf("    Описание: %s\n", product.Description)
-		fmt.Printf("    Цены:\n")
-		for _, price := range product.Prices.Prices {
-			fmt.Printf("      Ценa:\n")
-			fmt.Printf("        Ид: %s\n", price.ID)
-			fmt.Printf("        Наименование: %s\n", price.Title)
-			fmt.Printf("        Цена: %s\n", price.Price)
-		}
-		fmt.Printf("    Наличие:\n")
-		fmt.Printf("      Cклад:\n")
-		fmt.Printf("        Ид: %s\n", product.Availability.Stock.ID)
-		fmt.Printf("        ДатаПоступления: %s\n", product.Availability.Stock.ReceiptDate)
-		fmt.Printf("        Количество: %s\n", product.Availability.Stock.Quantity)
-
-		fmt.Printf("    Поступление:\n")
-		fmt.Printf("      Cклад:\n")
-		fmt.Printf("        Ид: %s\n", product.Admission.Stock.ID)
-		fmt.Printf("        ДатаПоступления: %s\n", product.Admission.Stock.ReceiptDate)
-		fmt.Printf("        Количество: %s\n", product.Admission.Stock.Quantity)
-		fmt.Println()
+func (p *Product) BeautyPrint() {
+	fmt.Printf("Товар:\n")
+	fmt.Printf("  Ид: %s\n", p.ID)
+	fmt.Printf("  Наименование: %s\n", p.Title)
+	fmt.Printf("  Артикул: %s\n", p.VendorCode)
+	fmt.Printf("  Кратность: %s\n", p.Multiplicity)
+	fmt.Printf("  Зарезервировано: %s\n", p.Reservation)
+	fmt.Printf("    Описание: %s\n", p.Description)
+	fmt.Printf("    Цены:\n")
+	for _, price := range p.Prices.Prices {
+		fmt.Printf("      Ценa:\n")
+		fmt.Printf("        Ид: %s\n", price.ID)
+		fmt.Printf("        Наименование: %s\n", price.Title)
+		fmt.Printf("        Цена: %s\n", price.Price)
 	}
+	fmt.Printf("    Наличие:\n")
+	fmt.Printf("      Cклад:\n")
+	fmt.Printf("        Ид: %s\n", p.Availability.Stock.ID)
+	fmt.Printf("        ДатаПоступления: %s\n", p.Availability.Stock.ReceiptDate)
+	fmt.Printf("        Количество: %s\n", p.Availability.Stock.Quantity)
+
+	fmt.Printf("    Поступление:\n")
+	fmt.Printf("      Cклад:\n")
+	fmt.Printf("        Ид: %s\n", p.Admission.Stock.ID)
+	fmt.Printf("        ДатаПоступления: %s\n", p.Admission.Stock.ReceiptDate)
+	fmt.Printf("        Количество: %s\n", p.Admission.Stock.Quantity)
+	fmt.Println()
 }

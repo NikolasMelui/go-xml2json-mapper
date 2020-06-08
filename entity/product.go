@@ -57,8 +57,8 @@ type Product struct {
 	Admission    admission    `xml:"Поступление"`
 }
 
-// Products ...
-type Products struct {
+// ProductsResponse ...
+type ProductsResponse struct {
 	XMLName  xml.Name  `xml:"Товары"`
 	XMLNS    string    `xml:"xmlns"`
 	XMLNSXS  string    `xml:"xmlns:xs"`

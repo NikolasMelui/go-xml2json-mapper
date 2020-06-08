@@ -58,15 +58,16 @@ func main() {
 	var productsCache cache.ProductCache = cache.NewRedisCache(cconfig.Config.RedisHost, cconfig.Config.RedisPassword, cconfig.Config.RedisDB, 1000)
 
 	for i, product := range productsResponse.Products {
-		time.Sleep(10 * time.Millisecond)
 		fmt.Printf("%d ----------\n", i)
 		productsCache.Set(product.ID, &product)
-		time.Sleep(100 * time.Millisecond)
+
+		time.Sleep(50 * time.Millisecond)
+
 		productCache := productsCache.Get(product.ID)
 		if productCache == nil {
 			fmt.Printf("Product %s with index %d did not found\n", product.ID, i)
 		} else {
-			fmt.Printf("%x\n", productCache.Data)
+			fmt.Printf("%+v\n", productCache)
 		}
 	}
 }

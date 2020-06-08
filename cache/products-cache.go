@@ -2,14 +2,14 @@ package cache
 
 import "github.com/nikolasmelui/go-xml2json-mapper/entity"
 
-// ProductCache ...
-type ProductCache struct {
+// ProductWithHash ...
+type ProductWithHash struct {
 	Data entity.Product
 	Hash string
 }
 
-// ProductsCache ...
-type ProductsCache interface {
-	Set(key string, value *ProductCache)
-	Get(key string) *ProductCache
+// ProductCache ...
+type ProductCache interface {
+	Set(key string, value *entity.Product)
+	Get(key string) *ProductWithHash
 }

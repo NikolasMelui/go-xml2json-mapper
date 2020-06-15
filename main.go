@@ -13,6 +13,7 @@ import (
 	"github.com/nikolasmelui/go-xml2json-mapper/cache"
 	"github.com/nikolasmelui/go-xml2json-mapper/cconfig"
 	"github.com/nikolasmelui/go-xml2json-mapper/entity"
+	"github.com/nikolasmelui/go-xml2json-mapper/helper"
 )
 
 type errorResponse struct {
@@ -55,19 +56,36 @@ func main() {
 		log.Printf("error: %v", err)
 	}
 
-	var productsCache cache.ProductCache = cache.NewRedisCache(cconfig.Config.RedisHost, cconfig.Config.RedisPassword, cconfig.Config.RedisDB, 1000)
+	var productsCache cache.ProductCache = cache.NewRedisCache(cconfig.Config.RedisHost, cconfig.Config.RedisPassword, cconfig.Config.RedisDB, 100000)
 
-	for i, product := range productsResponse.Products {
+	products := productsResponse.Products
+	for i, product := range products {
 		fmt.Printf("%d ----------\n", i)
-		productsCache.Set(product.ID, &product)
-
-		time.Sleep(50 * time.Millisecond)
 
 		productCache := productsCache.Get(product.ID)
-		if productCache == nil {
-			fmt.Printf("Product %s with index %d did not found\n", product.ID, i)
-		} else {
-			fmt.Printf("%+v\n", productCache)
+		// fmt.Println("Old - \n", productCache, "\n", "New - \n", &product)
+		// fmt.Println("Old - \n", productCache.Hash, "\n", "New - \n", hash)
+
+		hash := helper.InstanceHash(&product)
+		productWithHash := &cache.ProductWithHash{
+			Data: product,
+			Hash: hash,
 		}
+
+		if productCache == nil {
+			fmt.Printf("Product %s with index %d not found in cache, inserting...\n+++\n", product.ID, i)
+			productsCache.Set(product.ID, productWithHash)
+		} else {
+			// fmt.Printf("Old - %s, New - %s", productCache.Hash, hash)
+			if productCache.Hash == hash {
+				fmt.Printf("Product %s with index %d has not changed (same hash)\n", product.ID, i)
+				fmt.Printf("%+v\n", productCache)
+			} else {
+
+				fmt.Printf("Product %s with index %d has been changed (new hash), upding...\n+++\n", product.ID, i)
+				productsCache.Set(product.ID, productWithHash)
+			}
+		}
+		time.Sleep(50 * time.Millisecond)
 	}
 }

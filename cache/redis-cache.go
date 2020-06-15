@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/nikolasmelui/go-xml2json-mapper/entity"
-	"github.com/nikolasmelui/go-xml2json-mapper/helper"
 )
 
 type redisCache struct {
@@ -60,38 +58,35 @@ func (cache *redisCache) getClient() *RedisClient {
 }
 
 // Set ...
-func (cache *redisCache) Set(key string, value *entity.Product) {
+func (cache *redisCache) Set(key string, value *ProductWithHash) {
 	client := cache.getClient()
 
-	json, err := json.Marshal(&ProductWithHash{
-		Data: *value,
-		Hash: helper.InstanceHash(value),
-	})
+	json, err := json.Marshal(&value)
 	if err != nil {
 		panic(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
 	client.Set(ctx, key, json, cache.expires*time.Second)
-
 }
 
 func (cache *redisCache) Get(key string) *ProductWithHash {
 
 	client := cache.getClient()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
 	val, err := client.Get(ctx, key).Result()
+	// TODO: Custom error and handle need (return the error)
 	if err != nil {
 		return nil
 	}
 
 	productWithHash := &ProductWithHash{}
-	err = json.Unmarshal([]byte(val), productWithHash)
+	err = json.Unmarshal([]byte(val), &productWithHash)
 
 	return productWithHash
 }

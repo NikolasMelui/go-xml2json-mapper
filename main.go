@@ -66,24 +66,30 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 
-		var productToCache cache.Cachable
-		productToCache = &cache.ProductCache{
-			Data: product,
-			Hash: "",
-		}
-		productToCache.CreateHash()
-		err := cacher.Set(ctx, product.ID, &productToCache)
-		if err != nil {
-			log.Fatalf("Error: %v", err.Error())
-		}
-
 		var productCache cache.Cachable
 		productCache = &cache.ProductCache{}
 		err = cacher.Get(ctx, product.ID, &productCache)
 		if err != nil {
 			log.Fatalf("Error: %v", err.Error())
 		}
-		fmt.Println(productCache)
+
+		var productToCache cache.Cachable
+		productToCache = &cache.ProductCache{
+			Data: product,
+			Hash: "",
+		}
+		productToCache.SetHash()
+
+		productCacheHash := productCache.GetHash()
+		productToCacheHash := productToCache.GetHash()
+
+		// Chech the instance is not in the cache or hashes is different
+		if (len(productCacheHash) < 1) || (productCacheHash != productToCacheHash) {
+			err := cacher.Set(ctx, product.ID, &productToCache)
+			if err != nil {
+				log.Fatalf("Error: %v", err.Error())
+			}
+		}
 
 		time.Sleep(50 * time.Millisecond)
 	}

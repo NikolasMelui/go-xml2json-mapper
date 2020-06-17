@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"sync"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-type redisCache struct {
+type redisConnection struct {
 	host     string
 	password string
 	db       int
@@ -22,9 +23,17 @@ type RedisClient struct {
 	*redis.Client
 }
 
-// NewRedisCache ...
-func NewRedisCache(host string, password string, db int, expires time.Duration) ProductCache {
-	return &redisCache{
+// Cache ...
+type Cache interface {
+	Set(ctx context.Context, key string, value *Cachable) error
+	Get(ctx context.Context, key string, src *Cachable) error
+}
+
+var errNoValue = errors.New("There is no value by the given key")
+
+// NewRedisConnection ...
+func NewRedisConnection(host string, password string, db int, expires time.Duration) Cache {
+	return &redisConnection{
 		host:     host,
 		password: password,
 		db:       db,
@@ -35,7 +44,7 @@ func NewRedisCache(host string, password string, db int, expires time.Duration) 
 var once sync.Once
 var redisClient *RedisClient
 
-func (cache *redisCache) getClient() *RedisClient {
+func (cache *redisConnection) getClient() *RedisClient {
 	once.Do(func() {
 		client := redis.NewClient(&redis.Options{
 			Addr:     cache.host,
@@ -51,42 +60,45 @@ func (cache *redisCache) getClient() *RedisClient {
 
 	_, err := redisClient.Ping(ctx).Result()
 	if err != nil {
-		log.Fatalf("Could not connect to the redis %v", err)
+		log.Fatalf("Unable to connect to redis %v", err)
 	}
-	return redisClient
 
+	return redisClient
+}
+
+// Get ...
+func (cache *redisConnection) Get(ctx context.Context, key string, src *Cachable) error {
+	client := cache.getClient()
+
+	value, err := client.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return errNoValue
+		}
+		return err
+	}
+
+	err = json.Unmarshal([]byte(value), &src)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Set ...
-func (cache *redisCache) Set(key string, value *ProductWithHash) {
+func (cache *redisConnection) Set(ctx context.Context, key string, value *Cachable) error {
 	client := cache.getClient()
 
-	json, err := json.Marshal(&value)
+	data, err := json.Marshal(value)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-
-	client.Set(ctx, key, json, cache.expires*time.Second)
-}
-
-func (cache *redisCache) Get(key string) *ProductWithHash {
-
-	client := cache.getClient()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-
-	val, err := client.Get(ctx, key).Result()
-	// TODO: Custom error and handle need (return the error)
+	err = client.Set(ctx, key, data, cache.expires*time.Second).Err()
 	if err != nil {
-		return nil
+		return err
 	}
 
-	productWithHash := &ProductWithHash{}
-	err = json.Unmarshal([]byte(val), &productWithHash)
-
-	return productWithHash
+	return nil
 }

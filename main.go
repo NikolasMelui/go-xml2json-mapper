@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -13,7 +14,6 @@ import (
 	"github.com/nikolasmelui/go-xml2json-mapper/cache"
 	"github.com/nikolasmelui/go-xml2json-mapper/cconfig"
 	"github.com/nikolasmelui/go-xml2json-mapper/entity"
-	"github.com/nikolasmelui/go-xml2json-mapper/helper"
 )
 
 type errorResponse struct {
@@ -24,7 +24,7 @@ type errorResponse struct {
 func main() {
 	req, err := http.NewRequest("GET", entity.ProductsURL, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error: %v", err.Error())
 	}
 
 	req.Header.Set("Content-Type", "application/xml")
@@ -36,7 +36,7 @@ func main() {
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error: %v", err.Error())
 	}
 
 	defer res.Body.Close()
@@ -53,39 +53,38 @@ func main() {
 	var productsResponse entity.ProductsResponse
 	err = xml.Unmarshal(body, &productsResponse)
 	if err != nil {
-		log.Printf("error: %v", err)
+		log.Fatalf("Error: %v", err.Error())
 	}
 
-	var productsCache cache.ProductCache = cache.NewRedisCache(cconfig.Config.RedisHost, cconfig.Config.RedisPassword, cconfig.Config.RedisDB, 100000)
+	cacher := cache.NewRedisConnection(cconfig.Config.RedisHost, cconfig.Config.RedisPassword, cconfig.Config.RedisDB, 120)
 
 	products := productsResponse.Products
+
 	for i, product := range products {
 		fmt.Printf("%d ----------\n", i)
 
-		productCache := productsCache.Get(product.ID)
-		// fmt.Println("Old - \n", productCache, "\n", "New - \n", &product)
-		// fmt.Println("Old - \n", productCache.Hash, "\n", "New - \n", hash)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
 
-		hash := helper.InstanceHash(&product)
-		productWithHash := &cache.ProductWithHash{
+		var productToCache cache.Cachable
+		productToCache = &cache.ProductCache{
 			Data: product,
-			Hash: hash,
+			Hash: "",
+		}
+		productToCache.CreateHash()
+		err := cacher.Set(ctx, product.ID, &productToCache)
+		if err != nil {
+			log.Fatalf("Error: %v", err.Error())
 		}
 
-		if productCache == nil {
-			fmt.Printf("Product %s with index %d not found in cache, inserting...\n+++\n", product.ID, i)
-			productsCache.Set(product.ID, productWithHash)
-		} else {
-			// fmt.Printf("Old - %s, New - %s", productCache.Hash, hash)
-			if productCache.Hash == hash {
-				fmt.Printf("Product %s with index %d has not changed (same hash)\n", product.ID, i)
-				fmt.Printf("%+v\n", productCache)
-			} else {
-
-				fmt.Printf("Product %s with index %d has been changed (new hash), upding...\n+++\n", product.ID, i)
-				productsCache.Set(product.ID, productWithHash)
-			}
+		var productCache cache.Cachable
+		productCache = &cache.ProductCache{}
+		err = cacher.Get(ctx, product.ID, &productCache)
+		if err != nil {
+			log.Fatalf("Error: %v", err.Error())
 		}
+		fmt.Println(productCache)
+
 		time.Sleep(50 * time.Millisecond)
 	}
 }

@@ -3,7 +3,6 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"log"
 	"sync"
 	"time"
@@ -28,8 +27,6 @@ type Cache interface {
 	Set(ctx context.Context, key string, value *Cachable) error
 	Get(ctx context.Context, key string, src *Cachable) error
 }
-
-var errNoValue = errors.New("There is no value by the given key")
 
 // NewRedisConnection ...
 func NewRedisConnection(host string, password string, db int, expires time.Duration) Cache {
@@ -73,7 +70,7 @@ func (cache *redisConnection) Get(ctx context.Context, key string, src *Cachable
 	value, err := client.Get(ctx, key).Result()
 	if err != nil {
 		if err == redis.Nil {
-			return errNoValue
+			return nil
 		}
 		return err
 	}

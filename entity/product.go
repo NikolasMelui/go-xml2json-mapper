@@ -8,7 +8,7 @@ import (
 )
 
 // ProductsURL ...
-var ProductsURL = cconfig.Config.BaseURL + "/products"
+var ProductsURL = cconfig.Config.SourceURL + "/products"
 
 type stock struct {
 	XMLName     xml.Name `xml:"Склад"`

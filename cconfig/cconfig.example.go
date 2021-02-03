@@ -1,20 +1,20 @@
-package cconfig
+// package cconfig
 
 // type customConfig struct {
-// 	BaseURL           string
-// 	BasicAuthLogin    string
-// 	BasicAuthPassword string
-//  RedisHost          string
-//  RedisPassword      string
-//  RedisDB            int
+// 	SourceURL               string
+// 	SourceBasicAuthLogin    string
+// 	SourceBasicAuthPassword string
+// 	RedisHost               string
+// 	RedisPassword           string
+// 	RedisDB                 int
 // }
 
 // // Config ...
 // var Config = &customConfig{
-// 	BaseURL:           "https://your.xml.server.go",
-// 	BasicAuthLogin:    "login",
-// 	BasicAuthPassword: "password",
-//  RedisHost          "127.0.0.7:6379"
-//  RedisPassword      "password"
-//  RedisDB            0
+// 	SourceURL:               "https://your.xml.server.go",
+// 	SourceBasicAuthLogin:    "login",
+// 	SourceBasicAuthPassword: "password",
+// 	RedisHost:               "127.0.0.7:6379",
+// 	RedisPassword:           "password",
+// 	RedisDB:                 0,
 // }

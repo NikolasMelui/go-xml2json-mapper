@@ -29,7 +29,7 @@ func main() {
 
 	req.Header.Set("Content-Type", "application/xml")
 	req.Header.Set("Accept", "application/xml")
-	req.SetBasicAuth(cconfig.Config.BasicAuthLogin, cconfig.Config.BasicAuthPassword)
+	req.SetBasicAuth(cconfig.Config.SourceBasicAuthLogin, cconfig.Config.SourceBasicAuthPassword)
 
 	client := &http.Client{
 		Timeout: time.Minute,
